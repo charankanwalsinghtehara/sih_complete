@@ -9,7 +9,10 @@ import { useEffect, useState } from "react";
 import { checkHealth } from "../services/api";
 
 function Header({
-  onMenuClick
+  onMenuClick,
+  panelLabel = "Workspace",
+  onSwitchPanel,
+  switchLabel = "Switch panel"
 }) {
   const [backendOnline, setBackendOnline] =
     useState(false);
@@ -43,7 +46,7 @@ function Header({
 
         <div>
           <div className="header-eyebrow">
-            EVIDENCE WORKSPACE
+            {panelLabel.toUpperCase()}
           </div>
 
           <div className="header-title">
@@ -76,6 +79,16 @@ function Header({
             </span>
           </div>
         </div>
+
+        {onSwitchPanel && (
+          <button
+            type="button"
+            className="header-switch-button"
+            onClick={onSwitchPanel}
+          >
+            {switchLabel}
+          </button>
+        )}
 
         <button
           className="header-icon-button"

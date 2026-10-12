@@ -2,7 +2,6 @@ import {
   Activity,
   Blocks,
   BookOpen,
-  CheckCircle2,
   FileText,
   LayoutDashboard,
   Network,
@@ -10,47 +9,40 @@ import {
   X
 } from "lucide-react";
 
+const iconMap = {
+  dashboard: LayoutDashboard,
+  documents: FileText,
+  verification: ShieldCheck,
+  blockchain: Blocks,
+  network: Network,
+  documentation: BookOpen
+};
+
 function Sidebar({
   activePage,
   onNavigate,
-  mobileOpen
+  mobileOpen,
+  navigation,
+  brandName = "SecureTrace"
 }) {
-  const navigation = [
+  const navItems = navigation || [
     {
       id: "dashboard",
       label: "Dashboard",
       description: "System overview",
-      icon: LayoutDashboard
+      icon: "dashboard"
     },
     {
       id: "documents",
       label: "Documents",
       description: "Add & manage",
-      icon: FileText
+      icon: "documents"
     },
     {
       id: "verification",
       label: "Verification",
       description: "Check integrity",
-      icon: ShieldCheck
-    },
-    {
-      id: "blockchain",
-      label: "Blockchain",
-      description: "View ledger",
-      icon: Blocks
-    },
-    {
-      id: "network",
-      label: "Network",
-      description: "Validator status",
-      icon: Network
-    },
-    {
-      id: "documentation",
-      label: "Documentation",
-      description: "Guides & reference",
-      icon: BookOpen
+      icon: "verification"
     }
   ];
 
@@ -69,11 +61,7 @@ function Sidebar({
 
         <div className="brand-copy">
           <div className="brand-name">
-            SecureTrace
-          </div>
-
-          <div className="brand-tagline">
-            EVIDENCE MANAGEMENT
+            {brandName}
           </div>
         </div>
 
@@ -105,9 +93,8 @@ function Sidebar({
           MAIN MENU
         </div>
 
-        {navigation.map((item) => {
-          const Icon = item.icon;
-
+        {navItems.map((item) => {
+          const Icon = iconMap[item.icon] || ShieldCheck;
           const active =
             activePage === item.id;
 

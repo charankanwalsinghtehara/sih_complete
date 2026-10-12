@@ -2,23 +2,70 @@ const API_BASE =
   import.meta.env.VITE_API_BASE ||
   "http://127.0.0.1:8000";
 
+function readStoredToken() {
+  return localStorage.getItem("securetrace_jwt");
+}
+
 async function request(
   path,
   options = {}
 ) {
-  const response =
-    await fetch(
-      `${API_BASE}${path}`,
-      options
-    );
+  const headers = new Headers(options.headers || {});
+  const token = readStoredToken();
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const isFormData =
+    typeof FormData !== "undefined" &&
+    options.body instanceof FormData;
+
+  if (!isFormData && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers
+  });
 
   if (!response.ok) {
-    throw new Error(
-      `API request failed: ${response.status}`
-    );
+    let message = `API request failed: ${response.status}`;
+
+    try {
+      const payload = await response.json();
+      message = payload.detail || payload.message || message;
+    } catch {
+      // ignore JSON parsing issues
+    }
+
+    throw new Error(message);
   }
 
   return response.json();
+}
+
+export async function loginUser({ email, password }) {
+  return request("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password })
+  });
+}
+
+export async function signupUser({ name, email, password, role = "user" }) {
+  return request("/api/auth/signup", {
+    method: "POST",
+    body: JSON.stringify({ name, email, password, role })
+  });
+}
+
+export async function getCurrentUser() {
+  try {
+    return await request("/api/auth/me");
+  } catch {
+    return null;
+  }
 }
 
 export async function checkHealth() {
