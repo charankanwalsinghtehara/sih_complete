@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import jwt
 from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -23,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
 DOCUMENTS, WATERMARKED, MANIFESTS = DATA / "documents", DATA / "watermarked", DATA / "manifests"
 USERS_FILE = DATA / "users.json"
+FRONTEND_DIST = ROOT / "frontend" / "dist"
 for d in (DOCUMENTS, WATERMARKED, MANIFESTS, DATA):
     d.mkdir(parents=True, exist_ok=True)
 
@@ -93,6 +95,9 @@ def _get_authorization_payload(token: str):
 
 @app.get("/")
 def root():
+    index_file = FRONTEND_DIST / "index.html"
+    if index_file.is_file():
+        return FileResponse(index_file)
     return {"project": "SecureTrace", "modules": [1, 2], "mode": "offline", "status": "ready"}
 
 
@@ -295,3 +300,18 @@ async def extract_watermark(file: UploadFile = File(...)):
         raise HTTPException(400, f"watermark extraction failed: {exc}") from exc
     finally:
         temp.unlink(missing_ok=True)
+
+
+@app.get("/{path:path}")
+def frontend_file(path: str):
+    if not FRONTEND_DIST.is_dir():
+        raise HTTPException(status_code=404, detail="Not found")
+
+    requested_file = (FRONTEND_DIST / path).resolve()
+    if requested_file.is_relative_to(FRONTEND_DIST.resolve()) and requested_file.is_file():
+        return FileResponse(requested_file)
+
+    index_file = FRONTEND_DIST / "index.html"
+    if index_file.is_file():
+        return FileResponse(index_file)
+    raise HTTPException(status_code=404, detail="Not found")
